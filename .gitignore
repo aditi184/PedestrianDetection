@@ -4,4 +4,8 @@
 *.ipynb_checkpoints
 *.ipynb
 *.zip
+report
 PennFudanPed
+pedestrian_detection
+references
+
