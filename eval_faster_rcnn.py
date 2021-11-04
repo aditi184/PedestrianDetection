@@ -61,23 +61,25 @@ def main(root, test_json, output_json, device):
 
             labels = output['labels'].cpu()
             if len(labels) != 0:
-                bboxes = output['boxes'].cpu()[labels == 1]
-                scores = output['scores'].cpu()[labels == 1]
+                bboxes = output['boxes'].cpu()[labels == 1].tolist()
+                scores = output['scores'].cpu()[labels == 1].tolist()
+
+                #TODO Non-maximal suppression
 
                 if len(scores) == 0:
-                    bboxes, scores = np.array([[0,0,0,0]]), np.array([[0]])
+                    bboxes, scores = [[0,0,0,0]], [[0]]
                     print("no person prediction encountered")
             else:
-                bboxes, scores = np.array([[0,0,0,0]]), np.array([[0]])
+                bboxes, scores = [[0,0,0,0]], [[0]]
                 print("no prediction encountered")
             
             # set_trace()
             for bb, score in zip(bboxes, scores):
                 pred = {}
                 pred["image_id"] = img_id
-                pred["score"] = score.item()
+                pred["score"] = score
                 pred["category_id"] = 1
-                pred["bbox"] = bb.tolist()
+                pred["bbox"] = bb
                 predictions.append(pred)
     
     with open(output_json, "w") as f:
