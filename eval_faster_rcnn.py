@@ -1,3 +1,4 @@
+from ipdb import set_trace
 import json
 import os
 import cv2
@@ -46,7 +47,7 @@ def main(root, test_json, output_json, device):
 
     # dataset to evaluate
     testset = PennFudan_dataset(root, test_json)
-    testloader = DataLoader(testset, batch_size=32, shuffle=False)
+    testloader = DataLoader(testset, batch_size=1, shuffle=False)
 
     # predictions will be saved iteratively
     predictions = []
@@ -56,7 +57,7 @@ def main(root, test_json, output_json, device):
 
         # for each prediction (for image) iterate over possible bb and append them
         for idx, output in enumerate(outputs):
-            img_id = img_ids[idx]
+            img_id = img_ids[idx].item()
 
             labels = output['labels'].cpu()
             if len(labels) != 0:
@@ -70,10 +71,11 @@ def main(root, test_json, output_json, device):
                 bboxes, scores = np.array([[0,0,0,0]]), np.array([[0]])
                 print("no prediction encountered")
             
+            # set_trace()
             for bb, score in zip(bboxes, scores):
                 pred = {}
                 pred["image_id"] = img_id
-                pred["score"] = float(score[0])
+                pred["score"] = score.item()
                 pred["category_id"] = 1
                 pred["bbox"] = bb.tolist()
                 predictions.append(pred)
