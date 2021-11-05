@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import torch
 from imutils.object_detection import non_max_suppression
 
 def draw_rectangles(img, bboxes, scores):
@@ -28,10 +27,3 @@ def do_NMS(bboxes, scores):
         bboxes_nms[idx, 3] = bboxes_nms[idx, 3] - bboxes_nms[idx, 1] + 1
 
     return bboxes_nms, scores_nms
-
-def get_device(gpu_no=0):
-	if torch.cuda.is_available():
-		torch.cuda.set_device(gpu_no)
-		return torch.device('cuda:{}'.format(gpu_no))
-	else:
-		return torch.device('cpu')

@@ -20,6 +20,13 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def get_device(gpu_no=0):
+	if torch.cuda.is_available():
+		torch.cuda.set_device(gpu_no)
+		return torch.device('cuda:{}'.format(gpu_no))
+	else:
+		return torch.device('cpu')
+
 class PennFudan_dataset(Dataset):
     def __init__(self, root, test_json):
         super(PennFudan_dataset, self).__init__()
