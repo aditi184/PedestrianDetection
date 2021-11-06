@@ -19,8 +19,8 @@ def do_NMS(bboxes, scores, overlapThresh):
     # get scores for these bounding boxes
     scores_nms = []
     for bb in bboxes_nms:
-        scores_nms.append(scores[(bb == bboxes).mean(axis=1) == 1][0,0])
-    scores_nms = np.array(scores_nms).reshape(-1,1)
+        scores_nms.append(scores[(bb == bboxes).mean(axis=1) == 1][0])
+    scores_nms = np.array(scores_nms).reshape(-1)
 
     # changes x,y,x2,y2 to x,y,w,h
     for idx in range(bboxes_nms.shape[0]):

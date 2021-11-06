@@ -56,6 +56,7 @@ def main(root, test_json, output_json):
 
         if len(scores) != 0:
             # do NMS and append the predictions in COCO format
+            scores = scores.reshape(-1)
             init = len(scores)
             bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.65) # bboxes.dtype is int, scores.dtype is float
             final = len(scores)
@@ -70,7 +71,7 @@ def main(root, test_json, output_json):
         for bb, score in zip(bboxes, scores):
             pred = {}
             pred["image_id"] = img_id
-            pred["score"] = float(score[0])
+            pred["score"] = float(score)
             pred["category_id"] = 1
             pred["bbox"] = bb.astype(float).tolist()
             predictions.append(pred)

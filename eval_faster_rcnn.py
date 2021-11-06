@@ -32,7 +32,6 @@ class PennFudan_dataset(Dataset):
         super(PennFudan_dataset, self).__init__()
         self.root = root
         
-        test_json = json.loads(open(test_json,'r').read())
         self.img_dicts = test_json['images']
         
         self.normalize_trnsfrm = transforms.Compose([transforms.ToTensor()])
