@@ -1,7 +1,7 @@
 from ipdb import set_trace
 import json
 import os
-import cv2
+import pandas as pd
 import numpy as np
 import argparse
 import torch
@@ -58,39 +58,68 @@ def main(root, test_json, output_json, device):
 
     # predictions will be saved iteratively
     predictions = []
+    no_pred_count = 0
+    nms_count = 0
+
+    # for saving images with predicted bboxes, and comparing them with annotations
+    annotations = test_json['annotations'] # this is ONLY used for comparison of predicted bboxes
+    annotations = pd.json_normalize(annotations)
+    save_preds_dir = os.path.join(args.root, "predictions_faster_rcnn")
+    if os.path.exists(save_preds_dir) == False:
+        os.mkdir(save_preds_dir)
+    transfrm = transforms.ToPILImage()
+
+    print("\nstarting inference over given test.json")
     for batch_idx, (imgs,img_ids) in enumerate(testloader):
         imgs = imgs.to(device)
         outputs = model(imgs)
 
         # for each prediction (for image) iterate over possible bb and append them
+        # for batch size = 1, there will be only one output
         for idx, output in enumerate(outputs):
+            img = imgs[idx].cpu()
+            img = np.array(transfrm(img))
+
             img_id = img_ids[idx].item()
 
             labels = output['labels'].cpu()
-            if len(labels) != 0:
-                bboxes = output['boxes'].cpu()[labels == 1].tolist()
-                scores = output['scores'].cpu()[labels == 1].tolist()
+            if len(labels == 1) == 0:
+                no_pred_count += 1
+                continue
 
-                #TODO Non-maximal suppression
+            bboxes = output['boxes'].cpu()[labels == 1].astype(int) # .tolist()
+            scores = output['scores'].cpu()[labels == 1].astype(float) # .tolist()
+            
+            if len(scores) != 0:
+                # do NMS and append the predictions in COCO format
+                init = len(scores)
+                bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.65) # bboxes.dtype is int, scores.dtype is float
+                final = len(scores)
+                nms_count += (init-final)
 
-                if len(scores) == 0:
-                    bboxes, scores = [[0,0,0,0]], [[0]]
-                    print("no person prediction encountered")
-            else:
-                bboxes, scores = [[0,0,0,0]], [[0]]
-                print("no prediction encountered")
+            if len(scores) == 0:
+                # no predictions
+                # print("no prediction encountered")
+                no_pred_count+=1
+                continue
             
             # set_trace()
             for bb, score in zip(bboxes, scores):
                 pred = {}
                 pred["image_id"] = img_id
-                pred["score"] = score
+                pred["score"] = float(score)
                 pred["category_id"] = 1
-                pred["bbox"] = bb
+                pred["bbox"] = bb.astype(float).tolist()
                 predictions.append(pred)
+            
+            # for visualization of bboxes and comparison with annotations
+            save_img_with_pred(img, img_id, bboxes, scores, list(annotations.loc[annotations['image_id'] == img_id]['bbox']), save_preds_dir)
     
+    print("no predictions for %u images out of %u"%(no_pred_count, len(testset)))
     with open(output_json, "w") as f:
         json.dump(predictions, f)
+
+    print("Non-Maximal Suppression reduced %u Bounding Boxes"%(nms_count))
 
 if __name__ == "__main__":
     args = parse_args()
