@@ -1,4 +1,5 @@
 from ipdb import set_trace
+from tqdm import tqdm
 import json
 import os
 import pandas as pd
@@ -8,7 +9,6 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader
-import os
 import PIL.Image as Image
 from utils import *
 
@@ -70,7 +70,7 @@ def main(root, test_json, output_json, device):
     transfrm = transforms.ToPILImage()
 
     print("\nstarting inference over given test.json")
-    for batch_idx, (imgs,img_ids) in enumerate(testloader):
+    for (imgs,img_ids) in tqdm(testloader):
         imgs = imgs.to(device)
         outputs = model(imgs)
 
@@ -90,12 +90,11 @@ def main(root, test_json, output_json, device):
             bboxes = output['boxes'].cpu()[labels == 1].astype(int) # .tolist()
             scores = output['scores'].cpu()[labels == 1].astype(float) # .tolist()
             
-            if len(scores) != 0:
-                # do NMS and append the predictions in COCO format
-                init = len(scores)
-                bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.65) # bboxes.dtype is int, scores.dtype is float
-                final = len(scores)
-                nms_count += (init-final)
+            # do NMS and append the predictions in COCO format
+            init = len(scores)
+            bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.65) # bboxes.dtype is int, scores.dtype is float
+            final = len(scores)
+            nms_count += (init-final)
 
             if len(scores) == 0:
                 # no predictions
@@ -124,4 +123,5 @@ def main(root, test_json, output_json, device):
 if __name__ == "__main__":
     args = parse_args()
     device = get_device()
-    main(args.root, args.test, args.out, device)
+    test_json = json.loads(open(args.test,'r').read())
+    main(args.root, test_json, args.out, device)
