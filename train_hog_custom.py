@@ -6,7 +6,17 @@ import pandas as pd
 import argparse
 from utils import *
 import random
+from skimage.feature import hog
+from sklearn import svm
+from sklearn.metrics import classification_report,accuracy_score
+
+from sklearn import model_selection
 # random.seed(25)
+
+
+positive_samples = []
+negative_samples = []
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
     parser.add_argument('--root', type=str, default="./")
@@ -82,6 +92,7 @@ def extract_patches(img, img_id, bboxes, positive_dir, patch_size=(64,128)):
         patch = cv2.resize(patch, patch_size)
         save_patch = os.path.join(positive_dir, str(img_id)+"_%u.jpg"%(idx))
         cv2.imwrite(save_patch, patch)
+        positive_samples.append(patch)
 '''
 def extract_neg_patches(img,img_id,bboxes,negative_dir, patch_size=(64,128)):
     for idx,bbox in enumerate(bboxes):
@@ -105,6 +116,7 @@ def extract_neg_patches(img,img_id,bboxes,negative_dir, patch_size=(64,128)):
             
             save_patch = os.path.join(negative_dir, str(img_id)+"_%u.jpg"%(idx))
             cv2.imwrite(save_patch, patch)
+            negative_samples.append(patch)
 
 def create_positive_samples(root, train_json):
     # extract patches containing pedestrians using given annotations, resize them, and save inside "root/PennFudanPed/Positive"
@@ -141,9 +153,6 @@ def create_negative_samples(root, train_json):
 
 '''
 
-
-
-
 def create_negative_samples(root,train_json):
     negative_dir = os.path.join(os.path.join(root, "PennFudanPed"), "Negative")
     if os.path.exists(negative_dir) == False:
@@ -151,7 +160,6 @@ def create_negative_samples(root,train_json):
     img_dicts = train_json['images']
     annotations = train_json['annotations']
     annotations = pd.json_normalize(annotations)
-
     for img_dict in img_dicts:
         img = cv2.imread(os.path.join(root,img_dict['file_name']))
         img_id = img_dict['id']
@@ -165,6 +173,45 @@ def main(root, train_json, val_json, save_model):
     # create training data ie positive and negative samples for SVM using train_json
     create_positive_samples(root, train_json)
     create_negative_samples(root, train_json)
+    pos_labels = [1] * len(positive_samples)
+    neg_labels = [-1] * len(negative_samples)
+    # print("-------------------")
+    # print(len(positive_samples))
+    # print(len(negative_samples))
+    
+    # samples = np.hstack((positive_samples,negative_samples),axis=0)
+    samples = np.concatenate((positive_samples,negative_samples),axis = 0)
+    # print("-------------------")
+    labels = np.hstack((pos_labels,neg_labels))
+    # print(samples.shape)
+    # print(labels.shape)
+    # df = pd.DataFrame(data, columns = ['samples','labels'])
+    x_train, x_test, y_train, y_test = model_selection.train_test_split(samples,labels,test_size = 0.3)
+    # print(x_train.shape)
+    # print(x_test.shape)
+    # print(y_train.shape)
+    # print("-------------------")
+    # print("-------------------")
+    # for i in x_train:
+    #     print(i.shape)
+    #     break
+    hog_features = []
+    for i in x_train:
+        feature = hog(i,orientations=9, pixels_per_cell=(8, 8), cells_per_block=(3, 3), block_norm='L2-Hys', visualize=False, transform_sqrt=False, feature_vector=True, multichannel=True)
+        hog_features.append(feature)
+    hog_features = np.array(hog_features)
+    clf = svm.SVC()
+    clf.fit(hog_features,y_train)
+
+    test_features = []
+    for i in x_test:
+        feature = hog(i,orientations=9, pixels_per_cell=(8, 8), cells_per_block=(3, 3), block_norm='L2-Hys', visualize=False, transform_sqrt=False, feature_vector=True, multichannel=True)
+        test_features.append(feature)
+
+    y_pred = clf.predict(test_features)
+    print("Accuracy: "+str(accuracy_score(y_test, y_pred)))
+    print('\n')
+    print(classification_report(y_test, y_pred))
 
 if __name__ == "__main__":
     args = parse_args()
