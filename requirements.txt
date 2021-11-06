@@ -1,3 +1,4 @@
+pycocotools
 scikit-image
 sklearn
 imutils
