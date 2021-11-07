@@ -21,6 +21,7 @@ pip install -r requirements.txt
 
 ```
 wget https://www.cis.upenn.edu/~jshi/ped_html/PennFudanPed.zip
+unzip PennFudanPed.zip
 ```
 
 ## Running Models
