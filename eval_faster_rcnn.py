@@ -31,9 +31,7 @@ class PennFudan_dataset(Dataset):
     def __init__(self, root, test_json):
         super(PennFudan_dataset, self).__init__()
         self.root = root
-        
         self.img_dicts = test_json['images']
-        
         self.normalize_trnsfrm = transforms.Compose([transforms.ToTensor()])
 
     def __getitem__(self, index):
@@ -90,8 +88,8 @@ def main(root, test_json, output_json, device):
             bboxes = output['boxes'].cpu()[labels == 1].numpy().astype(int) # .tolist()
             scores = output['scores'].cpu()[labels == 1].numpy().astype(float) # .tolist()
 
-            bboxes[:, 2] = bboxes[:,2] - bboxes[:,0] 
-            bboxes[:, 3] = bboxes[:,3] - bboxes[:,1] 
+            bboxes[:, 2] -= bboxes[:,0] 
+            bboxes[:, 3] -= bboxes[:,1] 
             scores = scores.reshape(-1)
             
             # do NMS and append the predictions in COCO format
