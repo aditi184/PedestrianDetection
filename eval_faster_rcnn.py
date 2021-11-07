@@ -92,7 +92,7 @@ def main(root, test_json, output_json, device):
             
             # do NMS and append the predictions in COCO format
             init = len(scores)
-            bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.65) # bboxes.dtype is int, scores.dtype is float
+            bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.3) # bboxes.dtype is int, scores.dtype is float
             final = len(scores)
             nms_count += (init-final)
 
