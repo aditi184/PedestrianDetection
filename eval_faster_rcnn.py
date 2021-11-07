@@ -89,10 +89,14 @@ def main(root, test_json, output_json, device):
 
             bboxes = output['boxes'].cpu()[labels == 1].numpy().astype(int) # .tolist()
             scores = output['scores'].cpu()[labels == 1].numpy().astype(float) # .tolist()
+
+            bboxes[:, 2] = bboxes[:,2] - bboxes[:,0] 
+            bboxes[:, 3] = bboxes[:,3] - bboxes[:,1] 
+            scores = scores.reshape(-1)
             
             # do NMS and append the predictions in COCO format
             init = len(scores)
-            bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.3) # bboxes.dtype is int, scores.dtype is float
+            bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.9) # bboxes.dtype is int, scores.dtype is float
             final = len(scores)
             nms_count += (init-final)
 

@@ -10,9 +10,8 @@ def draw_rectangles(img, bboxes, scores):
 
 def do_NMS(bboxes, scores, overlapThresh):
     # changes x,y,w,h to x,y,x2,y2
-    for idx in range(bboxes.shape[0]):
-        bboxes[idx, 2] += bboxes[idx, 0]
-        bboxes[idx, 3] += bboxes[idx, 1]
+    bboxes[:, 2] += bboxes[:, 0]
+    bboxes[:, 3] += bboxes[:, 1]
     
     bboxes_nms = non_max_suppression(bboxes, probs=scores, overlapThresh=overlapThresh)
     
@@ -23,9 +22,8 @@ def do_NMS(bboxes, scores, overlapThresh):
     scores_nms = np.array(scores_nms).reshape(-1)
 
     # changes x,y,x2,y2 to x,y,w,h
-    for idx in range(bboxes_nms.shape[0]):
-        bboxes_nms[idx, 2] = bboxes_nms[idx, 2] - bboxes_nms[idx, 0]
-        bboxes_nms[idx, 3] = bboxes_nms[idx, 3] - bboxes_nms[idx, 1]
+    bboxes_nms[:, 2] -= bboxes_nms[:, 0]
+    bboxes_nms[:, 3] -= bboxes_nms[:, 1]
 
     return bboxes_nms, scores_nms
 
