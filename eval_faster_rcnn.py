@@ -71,7 +71,8 @@ def main(root, test_json, output_json, device):
     print("\nstarting inference over given test.json")
     for (imgs,img_ids) in tqdm(testloader):
         imgs = imgs.to(device)
-        outputs = model(imgs)
+        with torch.no_grad():
+            outputs = model(imgs)
 
         # for each prediction (for image) iterate over possible bb and append them
         # for batch size = 1, there will be only one output
@@ -86,8 +87,8 @@ def main(root, test_json, output_json, device):
                 no_pred_count += 1
                 continue
 
-            bboxes = output['boxes'].cpu()[labels == 1].astype(int) # .tolist()
-            scores = output['scores'].cpu()[labels == 1].astype(float) # .tolist()
+            bboxes = output['boxes'].cpu()[labels == 1].numpy().astype(int) # .tolist()
+            scores = output['scores'].cpu()[labels == 1].numpy().astype(float) # .tolist()
             
             # do NMS and append the predictions in COCO format
             init = len(scores)
