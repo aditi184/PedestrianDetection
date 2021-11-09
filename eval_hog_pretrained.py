@@ -7,6 +7,8 @@ import ipdb
 import pandas as pd
 from tqdm import tqdm
 from utils import *
+import torch
+from ipdb import set_trace
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
@@ -30,6 +32,7 @@ def main(root, test_json, output_json):
     hog = cv2.HOGDescriptor()
     hog.setSVMDetector(hog.getDefaultPeopleDetector())
     show_hog_params(hog)
+    sigmoid = torch.nn.Sigmoid() # use sigmoid to normalize svm scores
 
     # predictions will be saved iteratively
     predictions = []
@@ -71,7 +74,7 @@ def main(root, test_json, output_json):
         for bb, score in zip(bboxes, scores):
             pred = {}
             pred["image_id"] = img_id
-            pred["score"] = float(score)
+            pred["score"] = sigmoid(torch.tensor(float(score))).item()
             pred["category_id"] = 1
             pred["bbox"] = bb.astype(float).tolist()
             predictions.append(pred)

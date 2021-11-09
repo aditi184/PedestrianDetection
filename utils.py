@@ -1,6 +1,8 @@
 import os
 import cv2
 import numpy as np
+import torch
+import random
 from imutils.object_detection import non_max_suppression
 
 def draw_rectangles(img, bboxes, scores):
@@ -37,3 +39,8 @@ def save_img_with_pred(img, img_id, bboxes, scores, annotations, save_preds_dir)
         cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 1)
     
     cv2.imwrite(os.path.join(save_preds_dir, str(img_id)+".jpg"), img)
+
+def fix_seed(seed=4):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)

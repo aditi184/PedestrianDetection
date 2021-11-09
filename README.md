@@ -24,6 +24,13 @@ wget https://www.cis.upenn.edu/~jshi/ped_html/PennFudanPed.zip
 unzip PennFudanPed.zip
 ```
 
+##### Download SVM weights for Custom HoG Detector
+
+```
+gdown <link>
+unzip svm.zip
+```
+
 ## Running Models
 #### 1. Pretrained HoG Detector
 
@@ -48,7 +55,7 @@ python eval_hog_custom.py --root <path to dataset root directory> --test <path t
 #### 3. Faster RCNN
 
 ```bash
-python eval_faster_rcnn.py --root <path to dataset root directory> --test <path to test json> --out <path to output json> --model <path to pretrained Faster RCNN weights file>
+python eval_faster_rcnn.py --root <path to dataset root directory> --test <path to test json> --out <path to output json>
 ```
 
 ### Evaluation script
