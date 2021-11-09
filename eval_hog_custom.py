@@ -10,9 +10,7 @@ from tqdm import tqdm
 from utils import *
 import pickle
 from skimage.feature import hog
-from sklearn import svm
 import imutils
-from sklearn.metrics import classification_report,accuracy_score
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
@@ -26,34 +24,17 @@ def parse_args():
 
 
 def scaling_image(img,scale):
-    print("Control in scaling")
+    # print("Control in scaling")
     scaled_imgs = []
-    h = img.shape[0]
-    w = img.shape[1]
-    # while(True):
-    #     print("The infinite loop?")
-    #     h_scale = int(h/scale)
-    #     w_scale = int(w/scale)
-    #     img_scale = cv2.resize(img,(w_scale,h_scale))
-    #     if(img_scale.shape[0]<128 or img_scale.shape[1]<64):
-
-    #         break
-    #     scaled_imgs.append(img_scale)
-
     for scale in np.linspace(0.2, 1.0, 5)[::-1]:
-    		# resize the image according to the scale, and keep track
-		# of the ratio of the resizing
         resized = imutils.resize(img, width = int(img.shape[1] * scale))
         r = img.shape[1] / float(resized.shape[1])
-		# if the resized image is smaller than the template, then break
-		# from the loop
         if resized.shape[0] < 64 or resized.shape[1] < 32:
             break
         scaled_imgs.append(resized)
     return scaled_imgs
 
 def sliding_windows(img,stride):
-    print("Control in sliding")
     windows = []
     for j in range(0,img.shape[0],stride[0]):
         for i in range(0, img.shape[1],stride[1]):
@@ -64,8 +45,7 @@ def sliding_windows(img,stride):
 def make_predictions(clf,root,test_json, output_json):
     print("control in making preds")
     predictions = []
-    # for saving images with predicted bboxes, and comparing them with annotations
-    annotations = test_json['annotations'] # this is ONLY used for comparison of predicted bboxes
+    annotations = test_json['annotations'] 
     annotations = pd.json_normalize(annotations)
     save_preds_dir = os.path.join(args.root, "predictions_hog_pretrained")
     if os.path.exists(save_preds_dir) == False:
@@ -75,26 +55,21 @@ def make_predictions(clf,root,test_json, output_json):
     print("\nstarting inference over given test.json")
     img_dicts = test_json['images']
 
-    for img_dict in img_dicts:
+    for img_dict in tqdm(img_dicts):
         img = cv2.imread(os.path.join(root,img_dict['file_name']))
         img_id = img_dict['id']
         scale = 1.5
         pred_boxes = []
         pred_scores = []
         scaled_images = scaling_image(img,scale)
-        stride = [10,10]
+        stride = [15,20]
         for im in scaled_images:
             windows = sliding_windows(im,stride)
             for window in windows:
                 image = window[2]
                 if(image.shape[0] >= 128 and image.shape[1] >= 64):
-                    # print("-----")
-                    # print(image.shape)
                     feature =  hog(image,orientations=9, pixels_per_cell=(8, 8), cells_per_block=(3, 3), block_norm='L2-Hys', visualize=False, transform_sqrt=False, feature_vector=True, multichannel=True)
-                    # print(feature.shape)
-                    # print("-----")
                     feature = feature.reshape(1,-1)
-                    # feature = np.transpose(feature)
                     feature_class = clf.predict(feature)
                     if(feature_class == 1):
                         feature_confidence = clf.decision_function(feature)
@@ -103,7 +78,7 @@ def make_predictions(clf,root,test_json, output_json):
                         pred_scores.append(feature_confidence)
         pred_boxes = np.array(pred_boxes).astype(int)
         pred_scores = np.array(pred_scores).astype(float).reshape(-1)
-        bboxes,scores = do_NMS(pred_boxes,pred_scores,0.8)
+        bboxes,scores = do_NMS(pred_boxes,pred_scores,0.3)
         for bb, score in zip(bboxes, scores):
             pred = {}
             pred["image_id"] = img_id
