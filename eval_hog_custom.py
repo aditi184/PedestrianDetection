@@ -1,3 +1,4 @@
+from ipdb import set_trace
 import json
 import os
 import cv2
@@ -39,7 +40,7 @@ def scaling_image(img,scale):
     #         break
     #     scaled_imgs.append(img_scale)
 
-    for scale in np.linspace(0.2, 1.0, 20)[::-1]:
+    for scale in np.linspace(0.2, 1.0, 5)[::-1]:
     		# resize the image according to the scale, and keep track
 		# of the ratio of the resizing
         resized = imutils.resize(img, width = int(img.shape[1] * scale))
@@ -100,6 +101,8 @@ def make_predictions(clf,root,test_json, output_json):
                         pred_box = [window[0]*scale,window[1]*scale,64*scale,128*scale]
                         pred_boxes.append(pred_box)
                         pred_scores.append(feature_confidence)
+        pred_boxes = np.array(pred_boxes).astype(int)
+        pred_scores = np.array(pred_scores).astype(float).reshape(-1)
         bboxes,scores = do_NMS(pred_boxes,pred_scores,0.8)
         for bb, score in zip(bboxes, scores):
             pred = {}
