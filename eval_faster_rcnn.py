@@ -114,6 +114,7 @@ def main(root, test_json, output_json, device):
                 predictions.append(pred)
             
             # for visualization of bboxes and comparison with annotations
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             save_img_with_pred(img, img_id, bboxes, scores, list(annotations.loc[annotations['image_id'] == img_id]['bbox']), save_preds_dir)
     
     print("no predictions for %u images out of %u"%(no_pred_count, len(testset)))
