@@ -16,7 +16,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using Custom HoG Person Detector')
     parser.add_argument('--root', type=str, default="./")
     parser.add_argument('--test', type=str, default="PennFudanPed_val.json")
-    parser.add_argument('--out', type=str, default="PennFudanPed_predict.json")
+    parser.add_argument('--out', type=str, default="PennFudanPed_custom_hog_pred.json")
     parser.add_argument('--model',type=str, default="hog_custom.pt")
     parser.add_argument('--num_pyr_lyrs',type=int, default=1, help='number of pyramid layers')
     args = parser.parse_args()

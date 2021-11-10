@@ -15,8 +15,8 @@ from utils import *
 def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained Faster-RCNN')
     parser.add_argument('--root', type=str, default="./")
-    parser.add_argument('--test', type=str, default="./PennFudanPed/PennFudanPed_val.json")
-    parser.add_argument('--out', type=str, default="./PennFudanPed/PennFudanPed_prediction.json")
+    parser.add_argument('--test', type=str, default="PennFudanPed_val.json")
+    parser.add_argument('--out', type=str, default="PennFudanPed_frcnn_pred.json")
     args = parser.parse_args()
     return args
 

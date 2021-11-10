@@ -14,7 +14,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
     parser.add_argument('--root', type=str, default="./")
     parser.add_argument('--test', type=str, default="PennFudanPed_val.json")
-    parser.add_argument('--out', type=str, default="PennFudanPed_predict.json")
+    parser.add_argument('--out', type=str, default="PennFudanPed_pretrn_hog_pred.json")
     args = parser.parse_args()
     return args
 
