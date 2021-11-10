@@ -89,6 +89,7 @@ def main(root, test_json, output_json):
     print("Non-Maximal Suppression reduced %u Bounding Boxes"%(nms_count))
 
 if __name__ == "__main__":
+    fix_seed(seed=4)
     args = parse_args()
     test_json = json.loads(open(args.test,'r').read())
     main(args.root, test_json, args.out)

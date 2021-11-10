@@ -17,7 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
     parser.add_argument('--root', type=str, default="./")
     parser.add_argument('--train', type=str, default="PennFudanPed_train.json")
-    parser.add_argument('--save_model', type=str, default="hog_custom")
+    parser.add_argument('--save_model', type=str, default="hog_custom.pt")
     args = parser.parse_args()
     return args
 
@@ -78,7 +78,7 @@ def extract_neg_patches(img, img_id, bboxes, negative_dir, patch_size=(64,128), 
     neg_samples = []
     x_list = np.random.randint(0, img.shape[1]-patch_size[0], max_samples)
     y_list = np.random.randint(0, img.shape[0]-patch_size[1], max_samples)
-    assert len(x_list) == len(y_list) == 5, set_trace
+    assert len(x_list) == len(y_list) == max_samples, set_trace
 
     # select only those sampled patches that don't overlap with bboxes
     for idx,(x, y) in enumerate(zip(x_list, y_list)):
@@ -119,6 +119,9 @@ def main(root, train_json, save_model):
     negative_samples = create_negative_samples(root, train_json)[:len(positive_samples)]
     pos_labels = [1] * len(positive_samples)
     neg_labels = [-1] * len(negative_samples)
+
+    print("Training SVM...\n")
+    print("number of positive samples:%u , number of negative samples:%u"%(len(positive_samples), len(negative_samples)))
 
     samples = np.concatenate((positive_samples,negative_samples), axis=0)
     labels = np.hstack((pos_labels,neg_labels))
