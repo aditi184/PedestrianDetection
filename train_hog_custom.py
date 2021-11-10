@@ -14,7 +14,7 @@ import pickle
 from sklearn import model_selection
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
+    parser = argparse.ArgumentParser(description='Train SVM model for custom hog detector')
     parser.add_argument('--root', type=str, default="./")
     parser.add_argument('--train', type=str, default="PennFudanPed_train.json")
     parser.add_argument('--save_model', type=str, default="hog_custom.pt")
@@ -44,16 +44,41 @@ def create_positive_samples(root, train_json):
     
     return positive_samples
 
-def extract_patches(img, img_id, bboxes, positive_dir, patch_size=(64,128)):
+def extract_patches(img, img_id, bboxes, positive_dir, patch_size=(120,240)):
     pos_samples = []
     for idx, bbox in enumerate(bboxes):
         patch = get_patch(img, bbox)
         patch = cv2.resize(patch, patch_size)
-        save_patch = os.path.join(positive_dir, str(img_id)+"_%u.jpg"%(idx))
+
+        # flip the patch
+        patch_flip = cv2.flip(patch,1)
+        height,width,_ = patch.shape
         
+        # shift the patch
+        shift = random.uniform(0.01,0.3)
+        shift_h = height * shift
+        shift_w = width * shift
+        patch_w_shift_temp = patch[:,:int(width-shift_w),:]
+        patch_w_shift = cv2.resize(patch_w_shift_temp,(width,height),cv2.INTER_CUBIC)
+        patch_h_shift_temp= patch[:int(height-shift_h),:,:]
+        patch_h_shift = cv2.resize(patch_h_shift_temp,(width,height),cv2.INTER_CUBIC)
+        
+        # save data-augmented patches
         pos_samples.append(patch)
+        save_patch = os.path.join(positive_dir, str(img_id)+"_%u.jpg"%(idx))
         cv2.imwrite(save_patch, patch)
-        
+
+        # pos_samples.append(patch_flip)
+        # save_patch_flip = os.path.join(positive_dir, str(img_id)+"flip"+"_%u.jpg"%(idx))
+        # cv2.imwrite(save_patch_flip, patch_flip)
+
+        # pos_samples.append(patch_h_shift)
+        # save_patch_h = os.path.join(positive_dir, str(img_id)+"hshift"+"_%u.jpg"%(idx))
+        # cv2.imwrite(save_patch_h,patch_h_shift)
+
+        # pos_samples.append(patch_w_shift)
+        # save_patch_w = os.path.join(positive_dir, str(img_id)+"wshift"+"_%u.jpg"%(idx))
+        # cv2.imwrite(save_patch_w,patch_w_shift)
     return pos_samples
 
 def create_negative_samples(root,train_json):
@@ -74,7 +99,7 @@ def create_negative_samples(root,train_json):
     
     return negative_samples
 
-def extract_neg_patches(img, img_id, bboxes, negative_dir, patch_size=(64,128), max_samples=5):
+def extract_neg_patches(img, img_id, bboxes, negative_dir, patch_size=(120,240), max_samples=15):
     neg_samples = []
     x_list = np.random.randint(0, img.shape[1]-patch_size[0], max_samples)
     y_list = np.random.randint(0, img.shape[0]-patch_size[1], max_samples)

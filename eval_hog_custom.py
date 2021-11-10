@@ -13,7 +13,7 @@ from skimage.feature import hog
 import imutils
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
+    parser = argparse.ArgumentParser(description='Pedestrian Detection using Custom HoG Person Detector')
     parser.add_argument('--root', type=str, default="./")
     parser.add_argument('--test', type=str, default="PennFudanPed_val.json")
     parser.add_argument('--out', type=str, default="PennFudanPed_predict.json")
@@ -22,7 +22,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def make_predictions(clf, root, test_json, output_json, num_pyr_lyrs, patch_size=(64, 128)):
+def make_predictions(clf, root, test_json, output_json, num_pyr_lyrs, patch_size):
     # predictions will be saved iteratively
     predictions = []
     no_pred_count = 0
@@ -83,11 +83,11 @@ def make_predictions(clf, root, test_json, output_json, num_pyr_lyrs, patch_size
                         bbox = [x1, y1, w, h]
                         bboxes.append(bbox)
                         scores.append(svm_score)
-            
-        bboxes = np.array(bboxes).astype(int)
-        scores = np.array(scores).astype(float).reshape(-1)
 
         if len(scores) != 0:
+            bboxes = np.array(bboxes).astype(int)
+            scores = np.array(scores).astype(float).reshape(-1)
+
             # do NMS and append the predictions in COCO format
             init = len(scores)
             bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.8) # bboxes.dtype is int, scores.dtype is float
@@ -120,7 +120,7 @@ def make_predictions(clf, root, test_json, output_json, num_pyr_lyrs, patch_size
 def main(root, test_json, output_json, num_pyr_lyrs):
     # pretrained hog model
     clf = pickle.load(open(args.model, 'rb'))
-    make_predictions(clf,root,test_json, output_json, num_pyr_lyrs, patch_size=(64,128))# (120, 240)
+    make_predictions(clf,root,test_json, output_json, num_pyr_lyrs, patch_size=(120,240))
 
 if __name__ == "__main__":
     fix_seed(seed=4)
