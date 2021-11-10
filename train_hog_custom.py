@@ -44,16 +44,33 @@ def create_positive_samples(root, train_json):
     
     return positive_samples
 
-def extract_patches(img, img_id, bboxes, positive_dir, patch_size=(64,128)):
+def extract_patches(img, img_id, bboxes, positive_dir, patch_size=(120,240)):
     pos_samples = []
     for idx, bbox in enumerate(bboxes):
         patch = get_patch(img, bbox)
         patch = cv2.resize(patch, patch_size)
+        patch_flip = cv2.flip(patch,1)
+        height,width,_ = patch.shape
+        shift = random.uniform(0.01,0.3)
+        shift_h = height * shift
+        shift_w = width * shift
+        patch_w_shift_temp = patch[:,:int(width-shift_w),:]
+        patch_w_shift = cv2.resize(patch_w_shift_temp,(width,height),cv2.INTER_CUBIC)
+        patch_h_shift_temp= patch[:int(height-shift_h),:,:]
+        patch_h_shift = cv2.resize(patch_h_shift_temp,(width,height),cv2.INTER_CUBIC)
         save_patch = os.path.join(positive_dir, str(img_id)+"_%u.jpg"%(idx))
-        
+        save_patch_flip = os.path.join(positive_dir, str(img_id)+"flip"+"_%u.jpg"%(idx))
+        save_patch_h = os.path.join(positive_dir, str(img_id)+"hshift"+"_%u.jpg"%(idx))
+        save_patch_w = os.path.join(positive_dir, str(img_id)+"wshift"+"_%u.jpg"%(idx))
         pos_samples.append(patch)
+        pos_samples.append(patch_flip)
+        pos_samples.append(patch_h_shift)
+        pos_samples.append(patch_w_shift)
         cv2.imwrite(save_patch, patch)
-        
+        cv2.imwrite(save_patch_flip, patch_flip)
+        cv2.imwrite(save_patch_h,patch_h_shift)
+        cv2.imwrite(save_patch_w,patch_w_shift)
+     
     return pos_samples
 
 def create_negative_samples(root,train_json):
@@ -74,7 +91,7 @@ def create_negative_samples(root,train_json):
     
     return negative_samples
 
-def extract_neg_patches(img, img_id, bboxes, negative_dir, patch_size=(64,128), max_samples=5):
+def extract_neg_patches(img, img_id, bboxes, negative_dir, patch_size=(120,240), max_samples=15):
     neg_samples = []
     x_list = np.random.randint(0, img.shape[1]-patch_size[0], max_samples)
     y_list = np.random.randint(0, img.shape[0]-patch_size[1], max_samples)
@@ -126,10 +143,10 @@ def main(root, train_json, save_model):
     samples = np.concatenate((positive_samples,negative_samples), axis=0)
     labels = np.hstack((pos_labels,neg_labels))
 
-    x_train, x_test, y_train, y_test = model_selection.train_test_split(samples,labels,test_size = 0.3, random_state=4)
+    x_train, x_test, y_train, y_test = model_selection.train_test_split(samples,labels,test_size = 0.3, random_state=2)
     hog_features = []
-    for x in x_train:
-        x_feature = hog(x, orientations=9, pixels_per_cell=(8, 8), cells_per_block=(3, 3), block_norm='L2-Hys', visualize=False, transform_sqrt=False, feature_vector=True, multichannel=True)
+    for x in x_train: #transform_sqrt=False, feature_vector=True,
+        x_feature = hog(x, orientations=9, pixels_per_cell=(8, 8), cells_per_block=(2, 2), visualize=False,  multichannel=True)
         hog_features.append(x_feature)
 
     hog_features = np.array(hog_features)
@@ -138,7 +155,7 @@ def main(root, train_json, save_model):
 
     test_features = []
     for i in x_test:
-        feature = hog(i,orientations=9, pixels_per_cell=(8, 8), cells_per_block=(3, 3), block_norm='L2-Hys', visualize=False, transform_sqrt=False, feature_vector=True, multichannel=True)
+        feature = hog(i,orientations=9, pixels_per_cell=(8, 8), cells_per_block=(2, 2), visualize=False, multichannel=True)
         test_features.append(feature)
 
     y_pred = clf.predict(test_features)

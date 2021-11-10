@@ -1,6 +1,7 @@
 import json
 import os
 import cv2
+import imutils
 import numpy as np
 import argparse
 import ipdb
@@ -53,9 +54,9 @@ def main(root, test_json, output_json):
     for img_dict in tqdm(img_dicts):
         img = cv2.imread(os.path.join(root, img_dict['file_name']))
         img_id = img_dict['id']
-
+        # img = imutils.resize(img, width=(128))
         # predict the bboxes using pretrained HoG
-        bboxes, scores = hog.detectMultiScale(img, winStride=(2, 2), padding=(10, 10), scale=1.02) # bboxes.dtype is int, scores.dtype is float
+        bboxes, scores = hog.detectMultiScale(img, winStride=(2, 2), padding=(10, 10), scale=1.02,finalThreshold=2, winSize=(100,270)) # bboxes.dtype is int, scores.dtype is float
         scores = scores.reshape(-1)
         
         if len(scores) != 0:
