@@ -55,11 +55,11 @@ def main(root, test_json, output_json):
         img_id = img_dict['id']
 
         # predict the bboxes using pretrained HoG
-        bboxes, scores = hog.detectMultiScale(img, winStride=(2, 2), padding=(10, 10), scale=1.02) # bboxes.dtype is int, scores.dtype is float
-        scores = scores.reshape(-1)
-        
+        bboxes, scores = hog.detectMultiScale(img, winStride=(2, 2), padding=(10, 10), scale=1.02) # bboxes.dtype is int, scores.dtype is float        
         if len(scores) != 0:
             # do NMS and append the predictions in COCO format
+            scores = np.absolute(scores.reshape(-1)).astype(float)
+            bboxes = bboxes.astype(int)
             init = len(scores)
             bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.8) # bboxes.dtype is int, scores.dtype is float
             final = len(scores)
