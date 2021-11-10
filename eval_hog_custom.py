@@ -32,7 +32,7 @@ def make_predictions(clf, root, test_json, output_json, num_pyr_lyrs, patch_size
     # for saving images with predicted bboxes, and comparing them with annotations
     annotations = test_json['annotations'] 
     annotations = pd.json_normalize(annotations)
-    save_preds_dir = os.path.join(args.root, "predictions_hog_pretrained")
+    save_preds_dir = os.path.join(args.root, "predictions_hog_custom")
     if os.path.exists(save_preds_dir) == False:
         os.mkdir(save_preds_dir)
 
